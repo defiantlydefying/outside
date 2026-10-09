@@ -14,7 +14,7 @@ Built for the [Hacktoberfest Open Source AI Challenge: Touch Grass](https://dev.
 4. Start listening, lock your screen, and put your phone away.
 5. Finish whenever you need to. An optional reflection closes the session.
 
-The app includes a fixed three-minute sample for trying the experience without configuring the backend. The sample uses a device-generated voice; personalized sessions use ElevenLabs.
+The app includes a fixed three-minute sample with a soothing ElevenLabs Sarah narration and an original ambient music bed. It plays without configuring the backend or using provider credits on each listen. Personalized sessions use ElevenLabs River narration.
 
 ## How it works
 
@@ -84,3 +84,5 @@ Outside supports everyday wellbeing. It is not therapy, medical treatment, or em
 ## License
 
 [MIT](LICENSE). Generated audio and provider services have their own usage terms.
+
+Sample narration is attributed to **elevenlabs.io**. See [audio credits](assets/audio/README.md) for the sample's source, generation settings, and usage terms.

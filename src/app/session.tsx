@@ -24,7 +24,7 @@ export default function SessionScreen() {
     <Text style={[styles.body, { textAlign: 'center' }]}>{completed ? 'There’s no right way to feel afterward.' : 'Keep your eyes open. Listen to the guidance, and let the quiet spaces be quiet.'}</Text>
     <View style={[styles.card, styles.section]}><Text style={styles.label}>Your screen can rest, too.</Text><Text style={styles.body}>Start the audio, then lock your screen and pocket your phone. You can pause from the lock screen.</Text>
       {Constants.executionEnvironment === 'storeClient' && <Text style={styles.small}>You’re trying Outside in Expo Go. Screen-off playback needs testing in a dedicated app build.</Text>}
-      {session.sample && <Text style={styles.small}>This fixed 3-minute sample uses a device-generated voice. It does not use your check-in or ElevenLabs.</Text>}
+      {session.sample && <Text style={styles.small}>A fixed 3-minute break with gentle narration and soft ambient music. Narration by elevenlabs.io. Your check-in isn’t used for this sample.</Text>}
     </View>
     {error ? <Text accessibilityRole="alert" style={[styles.error, styles.section]}>{error}</Text> : null}
     <View style={styles.footer}>

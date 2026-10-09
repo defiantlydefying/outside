@@ -41,7 +41,7 @@ function useOutsideState() {
   }
   async function loadSample() {
     await clearSession();
-    player.replace(require('../../assets/audio/sample.mp3'));
+    player.replace(require('../../assets/audio/sample-elevenlabs.mp3'));
     setSession({ title: 'A little room to breathe', seconds: 180, sample: true });
   }
   async function createSession() {

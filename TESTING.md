@@ -25,11 +25,11 @@ Render runs the API. The Mac runs the app's development server, so keep it runni
 
 1. Tap **Listen to a 3-minute sample** on the home screen.
 2. Tap **Start my break** and check your phone's media volume.
-3. Listen for spoken guidance separated by quiet intervals. Silence between prompts is intentional.
+3. Listen for gentle spoken guidance over soft ambient music. Quiet intervals between prompts are intentional; the music continues underneath.
 4. Try **Pause**, then **Continue my break**.
 5. Try **Finish early → Finish break**, then **Back to my day**. Also let a sample finish naturally and check **Finish my break**.
 
-The sample is fixed audio with a device-generated voice. It checks the interface and playback without using Gemma or ElevenLabs credits.
+The sample is fixed audio narrated with ElevenLabs Sarah, mixed with original ambient music. It checks the interface and playback without making new Gemma or ElevenLabs requests. Personalized sessions currently use River with quiet intervals and no music bed.
 
 ## 3. Connect the live backend
 
