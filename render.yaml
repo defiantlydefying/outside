@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: outside-api
+    runtime: docker
+    # Smallest paid instance avoids free-tier sleep; review credit balance before deployment.
+    plan: 0.5c-512mb
+    rootDir: server
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: OUTSIDE_ACCESS_TOKEN
+        generateValue: true
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_VOICE_ID
+        sync: false
+      - key: GEMMA_BASE_URL
+        value: https://ollama.com/v1
+      - key: GEMMA_MODEL
+        value: gemma4:31b
+      - key: GEMMA_API_KEY
+        sync: false
