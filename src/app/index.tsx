@@ -8,6 +8,7 @@ export default function Home() {
   const { loaded, storageError, connection, loadSample } = useOutside();
   const [error, setError] = useState('');
   async function sample() {
+    setError('');
     try { await loadSample(); router.push('/session'); } catch { setError('The sample could not be loaded. Please try again.'); }
   }
   return <Screen>

@@ -34,21 +34,22 @@ function useOutsideState() {
   }
   async function clearSession() {
     pauseSession();
-    player.replace(null);
+    // Native replace requires a source record; an empty record clears the iOS item.
+    player.replace({});
     if (session?.uri) await FileSystem.deleteAsync(session.uri, { idempotent: true });
     setSession(null); setStarted(false); setCompleted(false);
   }
   async function loadSample() {
     await clearSession();
-    setSession({ title: 'A little room to breathe', seconds: 180, sample: true });
     player.replace(require('../../assets/audio/sample.mp3'));
+    setSession({ title: 'A little room to breathe', seconds: 180, sample: true });
   }
   async function createSession() {
     if (!connection) throw new Error('Open App setup to connect Outside, or try the sample first.');
     await clearSession();
     const result = await prepareSession(connection, checkIn);
-    setSession(result);
     player.replace({ uri: result.uri! });
+    setSession(result);
   }
   async function togglePlayback() {
     if (!session || !status.isLoaded) return;
