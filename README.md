@@ -10,7 +10,7 @@ A native iPhone prototype for short, voice-guided outdoor breaks. Speak or type 
 - Mastra workflow: Gemma planning → structural/content checks → ElevenLabs narration → a single audio track with actual silence between prompts.
 - Downloaded audio, background playback configuration, lock-screen controls, pause/resume, and early finish.
 - A fixed, bundled three-minute sample that works without provider accounts. This uses macOS's Samantha voice as a local prototype fixture, not ElevenLabs or Gemma. Replace the fixture with approved ElevenLabs narration before distributing a release.
-- Render Docker blueprint for the API. No deployment has been created.
+- Render Docker API deployed at https://outside-api-d8xc.onrender.com. Its health endpoint and authenticated configuration check passed on October 9. Successful live narration still needs ElevenLabs voice access.
 
 ## Try the interface on an iPhone
 
@@ -64,7 +64,7 @@ On a physical phone, use your Mac's local network address rather than `localhost
 1. Publish this project to a GitHub repository. Keep `server/.env` private; it is excluded by `.gitignore`. Use a private repository while preparing, then make the code public with an appropriate license before submitting the open-source challenge entry.
 2. In https://dashboard.render.com, confirm the challenge's $50 credit is applied to the workspace you will use.
 3. Choose **New > Blueprint**, connect GitHub, select your Outside repository and its `main` branch, and use `render.yaml` as the blueprint path.
-4. Supply `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, and `GEMMA_API_KEY` when Render prompts. Copy only the values from your local settings, without the variable names or equals signs. The blueprint already sets the hosted Gemma address and model and generates a fresh `OUTSIDE_ACCESS_TOKEN` on Render. Your local `.env` is not uploaded.
+4. Supply `ELEVENLABS_API_KEY` and `GEMMA_API_KEY` when Render prompts. Copy only the values from your local settings, without the variable names or equals signs. The blueprint selects Aria (`9BWtsMINqrJLrRacOk9x`) as the narration voice, sets the hosted Gemma address and model, and generates a fresh `OUTSIDE_ACCESS_TOKEN` on Render. Your local `.env` is not uploaded. Aria still requires the appropriate voice access on your ElevenLabs account; selecting a standard voice does not grant free API access.
 5. Review the single `outside-api` web service and its compute price, then deploy the blueprint. No database or disk is required. Wait for a successful deploy, then open the service's HTTPS address with `/health` appended. It should return `{"status":"ok"}`; this confirms the server is running, not that providers have been tested.
 6. On the service's **Environment** page, reveal and copy `OUTSIDE_ACCESS_TOKEN`. In the iPhone app's setup screen, paste the service's base HTTPS address (without `/health` or `/api`) and this access code. Choose **Check connection and save**.
 7. Prepare one short session to verify the actual Gemma and ElevenLabs integrations. Configuration checks alone do not verify credentials, quota, or voice access.
@@ -100,4 +100,4 @@ Initial audits flagged unresolved advisories in the SDK's build-tool dependency 
 
 ## Challenge evidence
 
-Claim a partner category only after the real integration has run. The bundled sample does not establish ElevenLabs or Gemma usage. On October 9, a synthetic live check completed Gemma planning and script validation; ElevenLabs narration returned HTTP 402 because the selected Voice Library voice requires a paid plan. Successful narration and transcription, a deployed Render service, a brief outdoor demo, repository link, and clear explanation of open-weight model use still need to be added to the DEV submission. Do not present exploratory before/after reflections as clinical proof.
+Claim a partner category only after the real integration has run. The bundled sample does not establish ElevenLabs or Gemma usage. On October 9, a synthetic live check completed Gemma planning and script validation. Render deployment was verified through `/health` and the authenticated `/api/ready` endpoint. ElevenLabs rejected the selected voice and the standard Aria and Rachel voice IDs with HTTP 402 on the configured free account. Successful narration and transcription, a brief outdoor demo, repository link, and clear explanation of open-weight model use still need to be added to the DEV submission. Do not present exploratory before/after reflections as clinical proof.

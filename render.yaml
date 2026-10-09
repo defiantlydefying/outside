@@ -14,7 +14,8 @@ services:
       - key: ELEVENLABS_API_KEY
         sync: false
       - key: ELEVENLABS_VOICE_ID
-        sync: false
+        # Aria, a standard former Default voice. Account voice access is still required.
+        value: 9BWtsMINqrJLrRacOk9x
       - key: GEMMA_BASE_URL
         value: https://ollama.com/v1
       - key: GEMMA_MODEL
