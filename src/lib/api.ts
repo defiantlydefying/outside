@@ -53,12 +53,36 @@ export async function checkConnection(connection: Connection) {
   await request(connection, '/api/ready');
 }
 export async function transcribeRecording(connection: Connection, uri: string): Promise<string> {
-  const body = new FormData();
-  // React Native's FormData accepts native file objects.
-  body.append('audio', { uri, name: 'check-in.m4a', type: 'audio/mp4' } as unknown as Blob);
-  const response = await request(connection, '/api/transcribe', { method: 'POST', body });
-  if (typeof response.text !== 'string') throw new Error('Could not read your check-in. Please type it instead.');
-  return response.text;
+  // Expo's fetch FormData rejects React Native's legacy { uri, name, type } parts.
+  // Upload the recording directly; the native uploader creates the multipart boundary.
+  const upload = FileSystem.createUploadTask(`${connection.url}/api/transcribe`, uri, {
+    httpMethod: 'POST',
+    uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+    fieldName: 'audio',
+    mimeType: 'audio/mp4',
+    sessionType: FileSystem.FileSystemSessionType.FOREGROUND,
+    headers: { Authorization: `Bearer ${connection.token}` },
+  });
+  let timedOut = false;
+  const timeout = setTimeout(() => {
+    timedOut = true;
+    void upload.cancelAsync().catch(() => {});
+  }, 75_000);
+  try {
+    let result: FileSystem.FileSystemUploadResult | undefined | null;
+    try { result = await upload.uploadAsync(); } catch {
+      throw new Error(timedOut ? 'This is taking too long. Please try again.' : 'Could not upload your recording. Check your connection and try again, or type your reply.');
+    }
+    if (timedOut) throw new Error('This is taking too long. Please try again.');
+    if (!result) throw new Error('The recording upload was cancelled. Please try again.');
+    let response: { text?: unknown; error?: unknown } | null;
+    try { response = JSON.parse(result.body); } catch {
+      throw new Error('Could not read the server response. Please try again, or type your reply.');
+    }
+    if (result.status < 200 || result.status >= 300) throw new Error(typeof response?.error === 'string' ? response.error : 'Could not transcribe your recording. Please try again, or type your reply.');
+    if (typeof response?.text !== 'string' || !response.text.trim()) throw new Error('No speech was detected. Please try again, or type your reply.');
+    return response.text.trim();
+  } finally { clearTimeout(timeout); }
 }
 export async function prepareSession(connection: Connection, checkIn: CheckIn): Promise<Session> {
   const data = await request(connection, '/api/sessions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(checkIn) });

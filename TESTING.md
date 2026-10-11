@@ -159,6 +159,8 @@ These are acceptance checks, not claims that every device behavior has passed. D
 | “The access code is incorrect” | Copy Render's `OUTSIDE_ACCESS_TOKEN` value, without its name, quotes, or extra spaces. |
 | “Could not reach the server” | Use the exact HTTPS base address above and confirm phone internet access. Open the [health endpoint](https://outside-api-d8xc.onrender.com/health); it should return `{"status":"ok"}`. |
 | Connection saves but session generation fails | Check Render's provider settings, voice access, quota, and logs. Readiness alone does not prove provider access. |
+| “Unsupported FormDataPart implementation” after recording | Reload Outside in Expo Go and start a new conversation. This upload-format bug is fixed in the current source; it does not require changes to Render settings. |
+| “Could not upload your recording” | Check phone internet access and retry a short reply. You can also use **Type a reply**. |
 | Audio seems silent | Check media volume, Bluetooth output, and whether playback is paused. Leave time for intentional quiet intervals. |
 | No lock-screen controls in Expo Go | Use a dedicated Outside build for this check. |
 
@@ -183,7 +185,7 @@ npm test
 npm run build
 ```
 
-The seven backend tests cover authentication, input validation, protected audio, prompt validation, pause scheduling, real FFmpeg duration, conversation context, quiet continuation, idempotent retries, and cleanup. Three app-side tests cover microphone-level detection and pauses. These use fixtures, not provider calls; they do not verify phone microphone behavior.
+The seven backend tests cover authentication, input validation, protected audio, prompt validation, pause scheduling, real FFmpeg duration, conversation context, quiet continuation, idempotent retries, and cleanup. Seven app-side tests cover microphone-level detection, pauses, recording upload configuration, response errors, and timeout cancellation. These use fixtures and mock native uploads, not provider calls; they do not verify phone microphone behavior.
 
 An optional live integration check consumes two Gemma requests and four short ElevenLabs clips using synthetic check-ins. From `server/` with a configured `.env`, run:
 
