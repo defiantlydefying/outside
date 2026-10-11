@@ -26,7 +26,7 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "Outside uses your microphone only when you choose to speak a check-in.",
+          "microphonePermission": "Outside listens to your replies during a conversation or when you choose to speak a check-in. You can mute the microphone or type instead.",
           "enableBackgroundPlayback": true,
           "enableBackgroundRecording": false
         }

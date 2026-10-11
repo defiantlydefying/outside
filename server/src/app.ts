@@ -5,9 +5,10 @@ import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import { rm } from 'node:fs/promises';
 import { checkInSchema, type CheckIn } from './session.js';
 import { transcribe } from './audio.js';
+import { createConversationRouter, type Reply, type TurnInput } from './conversation.js';
 
 type Result = { title: string; audioPath: string; directory: string; seconds: number };
-type Dependencies = { generate: (input: CheckIn) => Promise<Result>; transcribeAudio?: typeof transcribe; ready: () => boolean; token: string };
+type Dependencies = { generate: (input: CheckIn) => Promise<Result>; transcribeAudio?: typeof transcribe; respond?: (input: TurnInput) => Promise<Reply>; speak?: (text: string) => Promise<Buffer>; ready: () => boolean; token: string };
 const digest = (value: string) => createHash('sha256').update(value).digest();
 
 export function createApp(deps: Dependencies) {
@@ -26,8 +27,10 @@ export function createApp(deps: Dependencies) {
     next();
   });
   app.get('/api/ready', (_req, res) => res.status(deps.ready() ? 200 : 503).json({ ready: deps.ready(), error: deps.ready() ? undefined : 'The server still needs its ElevenLabs and Gemma settings.' }));
-  app.use('/api', rateLimit({ windowMs: 60_000, limit: 20, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: 'Please wait a minute before trying again.' } }));
+  app.use('/api', rateLimit({ windowMs: 60_000, limit: 60, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: 'Please wait a minute before trying again.' } }));
   app.use(express.json({ limit: '8kb' }));
+  const conversation = deps.respond ? createConversationRouter({ respond: deps.respond, speak: deps.speak, ready: deps.ready }) : null;
+  if (conversation) app.use('/api/conversations', conversation.router);
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 0 } });
   app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
     if (!deps.ready()) return void res.status(503).json({ error: 'Connect ElevenLabs and Gemma on the server first.' });
@@ -69,6 +72,7 @@ export function createApp(deps: Dependencies) {
   });
   return { app, close: async () => {
     clearInterval(cleanup);
+    conversation?.close();
     await Promise.all([...sessions.values()].map(session => rm(session.result.directory, { recursive: true, force: true })));
   } };
 }

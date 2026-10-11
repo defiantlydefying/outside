@@ -33,6 +33,7 @@
     "ios": "expo start --ios",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test test/*.test.mjs",
     "export:ios": "expo export --platform ios",
     "build:ios": "npx eas-cli@latest build --platform ios --profile development"
   },

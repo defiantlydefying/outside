@@ -41,13 +41,13 @@ export async function assembleTrack(clips: Buffer[], totalSeconds: number, direc
   return output;
 }
 
-export async function narrate(text: string): Promise<Buffer> {
+export async function narrate(text: string, options: { voice?: string; stability?: number } = {}): Promise<Buffer> {
   const key = process.env.ELEVENLABS_API_KEY;
-  const voice = process.env.ELEVENLABS_VOICE_ID;
+  const voice = options.voice || process.env.ELEVENLABS_VOICE_ID;
   if (!key || !voice) throw new Error('ElevenLabs is not configured.');
   const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voice)}?output_format=mp3_44100_128`, {
     method: 'POST', headers: { 'xi-api-key': key, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, model_id: process.env.ELEVENLABS_TTS_MODEL || 'eleven_flash_v2_5', voice_settings: { stability: 0.65, similarity_boost: 0.75, speed: 0.85 } }),
+    body: JSON.stringify({ text, model_id: process.env.ELEVENLABS_TTS_MODEL || 'eleven_flash_v2_5', voice_settings: { stability: options.stability ?? 0.65, similarity_boost: 0.75, speed: 0.85 } }),
     signal: AbortSignal.timeout(60_000),
   });
   if (!response.ok) throw new Error(`Voice generation failed (${response.status}). Check your ElevenLabs credits and selected voice.`);

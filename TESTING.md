@@ -48,9 +48,30 @@ Use the base address only, without `/health` or `/api`. The access code is not a
 
 The connection check verifies authentication and required settings. Preparing a session tests the actual provider calls.
 
-## 4. Test a personalized break with text
+## 4. Try the conversational prototype
 
-1. Tap **Take an outside break**.
+1. Reload Outside in Expo Go after the app update. The home screen should show **Talk to Outside · 3 minutes**. The Render backend must also be running the conversation update.
+2. Tap that button, read the microphone notice, and choose **Start talking with Outside**. Allow microphone access if you want to speak.
+3. After Sarah asks what is on your mind, wait until **Listening to you** appears. Say: `Work is overwhelming. I'm sitting outside and can see leaves on a tree.` A pause of about 1.6 seconds after detected speech should finish your reply. **Finish reply** also submits it manually.
+4. Listen for a short response about the surroundings you actually supplied. The guide may ask a follow-up question or suggest a noticing exercise with 10–30 seconds of quiet.
+5. During quiet time, say `Less talking, please. No breathing exercises.` Check that the next reply adapts, rather than restarting a fixed script. During narration, use **Interrupt and speak** first; simultaneous voice interruption over narration is not implemented.
+6. Try **Mute microphone**, **Type a reply**, and **Pause the conversation**. When paused, use **Continue the conversation**; interrupted narration restarts its short reply. Allow an in-flight reply to finish before resuming. **Start by typing** skips the initial microphone request.
+7. Say `stop`, tap **Finish**, or let the three-minute limit expire. Recording and playback should stop. Leaving the screen deletes the conversation; it is not saved as history.
+
+Keep this prototype in the foreground with internet access. Locking the screen or switching apps pauses it and stops recording. When you return, resume explicitly. With no detected speech for about ten seconds after a question, the app pauses listening without another prompt. Intentional quiet periods continue gently on their own. Voice detection is based on microphone levels, so wind and background noise need physical-device checks; use **Finish reply** or typing if detection is unreliable.
+
+This mode uses real Gemma inference through Mastra and ElevenLabs transcription/speech. Each new reply consumes provider quota. It does not use the ElevenLabs Agents call-minute plan or require its SDK. Conversations use Sarah by default, with no background music; natural surroundings remain audible. The main screen stays short so you can look away, but screen-off conversations are not implemented.
+
+### Take it outside for the challenge
+
+- Use it for one three-minute break in an outdoor spot of your choosing. Compare spoken guidance, quiet time, and how often you had to look at or touch the screen.
+- Try a specific mid-session request, such as less talking, switching attention from sight to sound, or avoiding breathing exercises.
+- Record what worked and what failed: wind, speech detection, response delay, useful adaptations, and interruptions. Exclude personal disclosures and precise location from a demo.
+- Describe your actual experience in the entry. Automated checks and a desk-based integration test do not substitute for taking it outside.
+
+## 5. Test a prepared audio break with text
+
+1. Tap **Prepare a guided audio break →**.
 2. Choose **Just pausing**, **3 minutes**, and **Sitting**.
 3. Type `A tree in a park, leaves moving in a light breeze` under **What do you notice around you?**
 4. Select **More quiet space** and tap **Prepare my break**.
@@ -61,7 +82,7 @@ Personalized sessions currently use **River**. The deployed API successfully gen
 
 Later, try **Walking**, another duration, and **More spoken guidance**. Listen for sensible, eyes-open guidance that uses your description without inventing surroundings or promising a particular emotional outcome.
 
-## 5. Test a spoken check-in
+## 6. Test a spoken check-in for a prepared track
 
 1. Open a new check-in and tap **Speak instead**.
 2. Read the transcription notice, choose **Record**, and allow microphone access.
@@ -78,7 +99,7 @@ Also check these cases:
 
 Speech transcription and physical-device microphone behavior still need testing. If text sessions work but speech fails, check the microphone permission and the ElevenLabs key's speech-to-text permission and quota.
 
-## 6. Test screen-off playback in an Outside build
+## 7. Test screen-off playback for prepared tracks in an Outside build
 
 Expo Go does not exercise Outside's own native configuration, and this app deliberately skips lock-screen controls there. Use a dedicated development build to verify the intended pocket-your-phone experience. See [Expo's development build guide](https://docs.expo.dev/develop/development-builds/introduction/) and [SDK 57 audio documentation](https://docs.expo.dev/versions/v57.0.0/sdk/audio/).
 
@@ -150,6 +171,7 @@ From the repository root:
 ```sh
 npm run lint
 npm run typecheck
+npm test
 npm run export:ios
 ```
 
@@ -161,4 +183,12 @@ npm test
 npm run build
 ```
 
-The five backend tests cover authentication, input validation, protected audio access, prompt validation, pause scheduling, and real FFmpeg track duration. They use fixtures and temporary local servers, not paid provider calls. Passing them does not verify phone behavior or live transcription.
+The seven backend tests cover authentication, input validation, protected audio, prompt validation, pause scheduling, real FFmpeg duration, conversation context, quiet continuation, idempotent retries, and cleanup. Three app-side tests cover microphone-level detection and pauses. These use fixtures, not provider calls; they do not verify phone microphone behavior.
+
+An optional live integration check consumes two Gemma requests and four short ElevenLabs clips using synthetic check-ins. From `server/` with a configured `.env`, run:
+
+```sh
+node --env-file=.env --import tsx scripts/check-conversation.mts
+```
+
+It checks the opening, an adaptive response about work and leaves, a request for less talking and no breathing focus, protected MP3 retrieval, and explicit stop. It passed with the configured Gemma endpoint and Sarah voice on October 11, 2026. It does not record a physical microphone or validate outdoor use.

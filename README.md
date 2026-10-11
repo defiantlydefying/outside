@@ -2,28 +2,40 @@
 
 **Put your phone away. Come back to here.**
 
-Outside is an iPhone app for short, guided breaks outdoors. Describe how you feel and what you notice around you, choose a few minutes, and listen to a meditation shaped around your surroundings. Spoken prompts alternate with quiet time to notice the world around you.
+Outside is an iPhone app for short outdoor wellbeing breaks. Talk about what’s on your mind, notice what’s around you, and receive spoken guidance that adapts as you respond. A three-minute conversation alternates short replies with intentional quiet practice.
 
 Built for the [Hacktoberfest Open Source AI Challenge: Touch Grass](https://dev.to/devteam/join-the-hacktoberfest-open-source-ai-challenge-week-1-touch-grass-2450-in-prizes-across-17-4pom).
 
 ## The experience
 
-1. Find a comfortable outdoor spot and check in by speaking or typing.
-2. Choose **3, 5, or 10 minutes**, sitting or walking, and how much guidance you want.
-3. Prepare your break. Outside generates the guidance and downloads one audio track.
-4. Start listening, lock your screen, and put your phone away.
-5. Finish whenever you need to. An optional reflection closes the session.
+1. Stop somewhere comfortable outdoors and tap **Talk to Outside · 3 minutes**.
+2. Start the conversation and describe what’s on your mind. Speaking and typing are both supported.
+3. Outside responds to what you say and offers a short practice using the surroundings you actually describe.
+4. Let the quiet periods be quiet, or speak to change the guidance. “Less talking” and “no breathing exercises” shape the next reply.
+5. Finish at any time. The break also ends at its three-minute limit.
 
-The app includes a fixed three-minute sample with a soothing ElevenLabs Sarah narration and an original ambient music bed. It plays without configuring the backend or using provider credits on each listen. Personalized sessions use ElevenLabs River narration.
+The Expo Go prototype listens **between** spoken replies, using microphone levels to detect a pause in speech. During narration, tap **Interrupt and speak** to take your turn. It supports quiet-period voice interruptions, muting, typing, and stopping recording when the app leaves the foreground. Conversation mode currently needs the app open and an internet connection; continuous speech interruption over narration and screen-off conversation are not implemented.
+
+For longer listening, **Prepare a guided audio break** creates a fixed **3, 5, or 10-minute** track. This mode downloads its narration and silent intervals together and is configured for background playback in a dedicated app build. It is separate from the adaptive conversation.
+
+The app includes a fixed three-minute sample with ElevenLabs Sarah narration and an original ambient music bed. It plays without backend configuration or new provider requests. Conversations also use Sarah by default; prepared audio breaks use River. Ambient music is currently included only in the sample.
+
+## Why open innovation matters
+
+**[Gemma](https://ai.google.dev/gemma/docs/core/model_card_4) drives the adaptive guidance.** Each new spoken or typed reply is passed to the open-weight model through [Mastra](https://github.com/mastra-ai/mastra), an open-source TypeScript agent framework. The model chooses what to say next and whether to ask a question, leave quiet space, or finish. This is central to the experience: someone describing leaves on a tree receives a noticing exercise, and someone asking for less talking receives a shorter reply and more silence.
+
+The guidance instructions, timing rules, validation, and workflow are in this repository. Developers can change the guide’s behavior, select a different Gemma model, or point the backend at their own compatible Gemma inference service. The same model configuration is used for both conversation and prepared sessions; there is no automatic fallback to a closed language model. Local Ollama is a supported configuration, but model weights and inference software must be installed separately.
+
+The current deployment uses **hosted Gemma inference** and proprietary ElevenLabs speech services. It is not an offline or fully open-source AI stack, and hosting and speech have their own costs. No GPS is requested. Conversations expire from backend memory after ten minutes or are deleted when finished; they are not persisted by this app. Provider retention remains subject to provider settings.
 
 ## How it works
 
 | Component | Role |
 | --- | --- |
 | **Expo / React Native** | Native interface, microphone recording, secure connection settings, and audio playback |
-| **Gemma** | Open-weight model that plans guidance from the check-in, duration, surroundings, and preferences |
-| **Mastra** | Coordinates planning, script validation, and narration |
-| **ElevenLabs** | Transcribes spoken check-ins and narrates personalized sessions |
+| **Gemma** | Open-weight model that generates adaptive replies and plans prepared guidance |
+| **Mastra** | Open-source workflows coordinate conversation replies, planning, and validation |
+| **ElevenLabs** | Transcribes speech and voices each reply or prepared session |
 | **FFmpeg** | Combines narration and real silent intervals into a track of the requested length |
 | **Render** | Hosts the Docker backend and temporary session audio |
 
@@ -63,19 +75,20 @@ eas.json           iOS build profiles
 ```sh
 npm run lint
 npm run typecheck
+npm test
 ```
 
 Backend checks and the manual phone checklist are in [TESTING.md](TESTING.md). Contributions should describe the behavior changed and how it was verified. Follow [AGENTS.md](AGENTS.md) when using a coding agent.
 
 ## Project status
 
-Outside is a working hackathon prototype. On October 9, 2026, the deployed API generated a complete three-minute session with Gemma, Mastra, and River narration on the configured free ElevenLabs account, and successfully served its MP3.
+Outside is a working hackathon prototype. On October 11, 2026, a real integration check exercised Gemma through Mastra and Sarah narration: an initial question, a reply about work stress and leaves, a request for less talking and no breathing exercises, and an explicit stop. Gemma adapted the exercise and extended the quiet period. Automated tests cover conversation context, quiet continuation, retries, protected audio, cleanup, and microphone-level detection.
 
-Physical iPhone recording, audio interruptions, and screen-off playback still need device testing. Background playback and lock-screen controls are configured for a dedicated app build; Expo Go is a preview environment. Android is configured but has not been validated.
+Physical iPhone recording, silence detection in outdoor wind, interruptions, and screen-off audio playback still need device testing. Background playback and lock-screen controls are configured for prepared tracks in a dedicated app build; conversation mode pauses when the app leaves the foreground. Android is configured but has not been validated. No outdoor field test has been claimed.
 
 ## Privacy
 
-Voice recordings go to ElevenLabs for transcription. Check-in text goes to the configured Gemma provider, and meditation text goes to ElevenLabs for narration. Local voice recordings are deleted after transcription; the backend does not persist check-ins or reflections. Generated audio expires after approximately one hour, and downloaded session audio is removed when the session is cleared. Provider retention follows the relevant account settings.
+Voice recordings go to ElevenLabs for transcription. User text goes to the configured Gemma provider, and generated guidance goes to ElevenLabs for narration. Local voice recordings are deleted after transcription. Conversation text and reply audio are held in backend memory for at most ten minutes and deleted when the conversation is finished; downloaded reply audio is deleted when leaving or finishing the break. Prepared audio expires after approximately one hour and is removed from the phone when cleared. Check-ins and reflections are not persisted by the backend. Provider retention follows the relevant account settings.
 
 Outside does not request location access. Connection settings are stored with SecureStore. The shared access code is intended for a private prototype; multi-user accounts are not implemented.
 

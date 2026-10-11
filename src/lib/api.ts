@@ -21,7 +21,7 @@ async function request(connection: Connection, path: string, options: RequestIni
   const timeout = setTimeout(() => controller.abort(), path === '/api/sessions' ? 360_000 : 75_000);
   try {
     const response = await fetch(`${connection.url}${path}`, { ...options, headers: { ...options.headers, Authorization: `Bearer ${connection.token}` }, signal: controller.signal });
-    const data = await response.json();
+    const data = response.status === 204 ? undefined : await response.json();
     if (!response.ok) throw new Error(data.error || 'Could not reach Outside. Please try again.');
     return data;
   } catch (error) {
@@ -29,6 +29,24 @@ async function request(connection: Connection, path: string, options: RequestIni
     if (error instanceof TypeError) throw new Error('Could not reach the server. Check your connection and App setup.');
     throw error;
   } finally { clearTimeout(timeout); }
+}
+
+export type ConversationTurn = { id: string; turn: number; text: string; mode: 'listen' | 'quiet' | 'finish'; quietSeconds: number; remainingSeconds: number; audioPath: string; uri: string };
+export async function conversationTurn(connection: Connection, current?: ConversationTurn, message?: string): Promise<ConversationTurn> {
+  const data = await request(connection, current ? `/api/conversations/${current.id}/turns` : '/api/conversations', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(current ? { turn: current.turn, action: message ? 'reply' : 'continue', ...(message ? { message } : {}) } : {}),
+  });
+  if (!/^[a-f0-9-]{36}$/.test(data.id) || !Number.isInteger(data.turn) || typeof data.text !== 'string' || !['listen', 'quiet', 'finish'].includes(data.mode) || !Number.isFinite(data.remainingSeconds) || !Number.isFinite(data.quietSeconds) || !new RegExp(`^/api/conversations/${data.id}/audio/[a-f0-9-]{36}$`).test(data.audioPath)) throw new Error('The server returned an invalid spoken reply. Please start a new break.');
+  const uri = `${FileSystem.cacheDirectory}outside-conversation-${data.id}-${data.turn}.mp3`;
+  try {
+    const download = await FileSystem.downloadAsync(`${connection.url}${data.audioPath}`, uri, { headers: { Authorization: `Bearer ${connection.token}` } });
+    if (download.status !== 200) throw new Error('The spoken reply could not be downloaded. Please try again.');
+    return { ...data, uri };
+  } catch (error) { await FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {}); throw error; }
+}
+export async function endConversation(connection: Connection, id: string) {
+  await request(connection, `/api/conversations/${id}`, { method: 'DELETE' });
 }
 
 export async function checkConnection(connection: Connection) {
