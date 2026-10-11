@@ -84,7 +84,7 @@ References: [Render Blueprints](https://render.com/docs/infrastructure-as-code),
 | `POST /api/sessions` | Generate a session from a validated check-in |
 | `POST /api/transcribe` | Transcribe a short M4A recording |
 | `GET /api/audio/:id` | Retrieve generated audio before it expires |
-| `POST /api/conversations` | Start a three-minute conversation and receive its opening speech |
+| `POST /api/conversations` | Start a three-minute meditation with optional `{practice: "breathing" \| "body" \| "none"}`; `none` starts with a check-in |
 | `POST /api/conversations/:id/turns` | Send `{turn, action: "reply", message}` or `{turn, action: "continue"}` after quiet practice |
 | `GET /api/conversations/:id/audio/:clip` | Retrieve one spoken reply |
 | `DELETE /api/conversations/:id` | Discard the conversation and its reply audio |
@@ -95,6 +95,6 @@ All `/api` routes require `Authorization: Bearer <OUTSIDE_ACCESS_TOKEN>`. Readin
 
 The API uses one shared private access code, bounded request sizes, request rate limits, provider timeouts, and a maximum of two concurrent generation jobs. Sessions are held in memory, with audio in temporary files for approximately one hour; restarts discard session availability. This is intended for a private prototype rather than a multi-user service.
 
-Conversations have a three-minute wall-clock limit, at most twelve adaptive turns, four concurrent stored conversations, and two simultaneous reply jobs. Context and speech clips live in memory for at most ten minutes; explicit finish deletes them. Successful turn retries replay the previous result rather than issuing another model or speech request. Each turn uses the configured Gemma model through Mastra, followed by ElevenLabs speech. No ElevenLabs Agent or extra account permissions are needed for this Expo Go prototype.
+Conversations have a three-minute wall-clock limit, at most twelve adaptive turns, four concurrent stored conversations, and two simultaneous reply jobs. Context and speech clips live in memory for at most ten minutes; explicit finish deletes them. Successful turn retries replay the previous result rather than issuing another model or speech request. After a short opening, each adaptive turn uses the configured Gemma model through Mastra, followed by ElevenLabs speech. Replies include `practice` (`breathing`, `body`, `listening`, `rest`, or `none`), `mode`, and up to 45 seconds of quiet. Timing reserves space for narration and closing. No ElevenLabs Agent or extra account permissions are needed for this Expo Go prototype.
 
 Initial dependency audits reported unresolved advisories in the Expo build-tool dependency tree (`braces`, `node-forge`, and `uuid`) and Mastra's transitive `sprintf-js`. Recheck before release and use upgrades compatible with the selected SDK and providers. Avoid `npm audit fix --force`, which previously proposed incompatible downgrades. A clean security audit has not been established.

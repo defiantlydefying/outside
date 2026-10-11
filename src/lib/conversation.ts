@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { AudioModule, RecordingPresets, setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus, useAudioRecorder, useAudioRecorderState } from 'expo-audio';
 import * as FileSystem from 'expo-file-system/legacy';
-import { conversationTurn, endConversation, transcribeRecording, type Connection, type ConversationTurn } from './api';
+import { conversationTurn, endConversation, transcribeRecording, type Connection, type ConversationTurn, type Practice } from './api';
 import { newListeningState, replyFinished, updateListening } from './listening';
 
 type Phase = 'ready' | 'thinking' | 'loading' | 'speaking' | 'listening' | 'quiet' | 'paused' | 'finished';
@@ -14,6 +14,7 @@ export function useConversation(connection: Connection | null) {
   const [heard, setHeard] = useState('');
   const [remaining, setRemaining] = useState(180);
   const [pending, setPending] = useState(false);
+  const [practice, setPractice] = useState<Practice>('none');
   const player = useAudioPlayer(null, { updateInterval: 100 });
   const status = useAudioPlayerStatus(player);
   const recorder = useAudioRecorder({ ...RecordingPresets.HIGH_QUALITY, numberOfChannels: 1, isMeteringEnabled: true });
@@ -76,7 +77,7 @@ export function useConversation(connection: Connection | null) {
     if (current.mode === 'finish') { await finish(); return; }
     await listen(current.mode === 'quiet');
   }
-  async function ask(message?: string) {
+  async function ask(message?: string, startPractice: Practice = 'none') {
     if (!connection || busy.current) return;
     busy.current = true;
     setPending(true);
@@ -85,7 +86,7 @@ export function useConversation(connection: Connection | null) {
     if (message) setHeard(message);
     await discard();
     try {
-      const next = await conversationTurn(connection, turn.current, message);
+      const next = await conversationTurn(connection, turn.current, message, startPractice);
       files.current.add(next.uri);
       if (!live.current || phaseRef.current === 'finished') {
         await endConversation(connection, next.id).catch(() => {});
@@ -96,7 +97,7 @@ export function useConversation(connection: Connection | null) {
       needsPlayback.current = true;
       if (!deadline.current) deadline.current = Date.now() + next.remainingSeconds * 1000;
       deadline.current = Math.min(deadline.current, Date.now() + next.remainingSeconds * 1000);
-      setText(next.text); if (message) setHeard(message);
+      setText(next.text); setPractice(next.practice); if (message) setHeard(message);
       if (run !== epoch.current) return;
       await setAudioModeAsync(playbackMode);
       if (run !== epoch.current) return;
@@ -124,14 +125,14 @@ export function useConversation(connection: Connection | null) {
     } catch (err) { if (run === epoch.current && live.current) { change('paused'); setError(err instanceof Error ? err.message : 'Could not hear your reply. Please try again.'); } }
     finally { busy.current = false; if (live.current) setPending(false); if (uri) await FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => {}); }
   }
-  async function start(useVoice = true) {
+  async function start(useVoice = true, startPractice: Practice = 'breathing') {
     if (!connection) { setError('Connect Outside in App setup first.'); return; }
     if (busy.current) return;
     const permission = useVoice ? await AudioModule.requestRecordingPermissionsAsync() : { granted: false };
     if (!live.current) return;
     muted.current = !permission.granted; setMicOff(muted.current);
     if (!permission.granted) setError('Microphone access is off. You can type your replies.');
-    await ask();
+    await ask(undefined, startPractice);
   }
   async function interrupt() {
     if (busy.current || !turn.current) return;
@@ -147,7 +148,7 @@ export function useConversation(connection: Connection | null) {
       await setAudioModeAsync(playbackMode);
       player.replace({ uri: turn.current.uri }); change('loading'); return;
     }
-    await listen();
+    await listen(turn.current.mode === 'quiet');
   }
   async function toggleMic() {
     if (muted.current) {
@@ -184,7 +185,7 @@ export function useConversation(connection: Connection | null) {
   useEffect(() => {
     if (!recording.isRecording || !recordingActive.current || !['listening', 'quiet'].includes(phaseRef.current)) return;
     listening.current = updateListening(listening.current, recording.metering, recording.durationMillis);
-    if (replyFinished(listening.current, recording.durationMillis) || recording.durationMillis >= 30_000) void actions.current.finishReply();
+    if (replyFinished(listening.current, recording.durationMillis) || (listening.current.speechAt !== null && recording.durationMillis >= 60_000)) void actions.current.finishReply();
     else if (phaseRef.current === 'listening' && recording.durationMillis >= 10_000 && listening.current.speechAt === null) void actions.current.pause();
   }, [recording.isRecording, recording.metering, recording.durationMillis]);
   useEffect(() => {
@@ -199,5 +200,5 @@ export function useConversation(connection: Connection | null) {
     // ask uses refs for the active turn, phase and operation lock.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connection]);
-  return { phase, error, text, heard, remaining, pending, micOff, start, pause, finish, interrupt, resume, toggleMic, finishReply, send: ask };
+  return { phase, error, text, heard, remaining, pending, practice, micOff, start, pause, finish, interrupt, resume, toggleMic, finishReply, send: ask };
 }

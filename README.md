@@ -2,16 +2,16 @@
 
 **Put your phone away. Come back to here.**
 
-Outside is an iPhone app for short outdoor wellbeing breaks. Talk about what’s on your mind, notice what’s around you, and receive spoken guidance that adapts as you respond. A three-minute conversation alternates short replies with intentional quiet practice.
+Outside is an iPhone app for short outdoor meditations. A gentle voice leads breathing, body relaxation, and quiet practice. Speak whenever you want to change the guidance; the meditation adapts without making every pause another question.
 
 Built for the [Hacktoberfest Open Source AI Challenge: Touch Grass](https://dev.to/devteam/join-the-hacktoberfest-open-source-ai-challenge-week-1-touch-grass-2450-in-prizes-across-17-4pom).
 
 ## The experience
 
-1. Stop somewhere comfortable outdoors and tap **Talk to Outside · 3 minutes**.
-2. Start the conversation and describe what’s on your mind. Speaking and typing are both supported.
-3. Outside responds to what you say and offers a short practice using the surroundings you actually describe.
-4. Let the quiet periods be quiet, or speak to change the guidance. “Less talking” and “no breathing exercises” shape the next reply.
+1. Stop somewhere comfortable outdoors and tap **Meditate with Outside · 3 minutes**.
+2. Choose **Gentle breathing** or **Relax the body**, then **Begin my meditation**. You can also check in first by speaking or typing.
+3. Follow the guidance into 30–45 seconds of quiet practice. Breathing uses an expanding circle with an optional four-second inhale and six-second exhale, without holds; your comfortable pace takes priority. The circle starts after narration, stops when paused, and respects Reduce Motion.
+4. Look away and practice, or speak to change the guidance. “Less talking” and “no breathing exercises” shape the next reply. **Skip breathing** switches to body relaxation. The guide is instructed to deepen one anchor, rather than repeatedly collect things you see.
 5. Finish at any time. The break also ends at its three-minute limit.
 
 The Expo Go prototype listens **between** spoken replies, using microphone levels to detect a pause in speech. During narration, tap **Interrupt and speak** to take your turn. It supports quiet-period voice interruptions, muting, typing, and stopping recording when the app leaves the foreground. Conversation mode currently needs the app open and an internet connection; continuous speech interruption over narration and screen-off conversation are not implemented.
@@ -22,7 +22,7 @@ The app includes a fixed three-minute sample with ElevenLabs Sarah narration and
 
 ## Why open innovation matters
 
-**[Gemma](https://ai.google.dev/gemma/docs/core/model_card_4) drives the adaptive guidance.** Each new spoken or typed reply is passed to the open-weight model through [Mastra](https://github.com/mastra-ai/mastra), an open-source TypeScript agent framework. The model chooses what to say next and whether to ask a question, leave quiet space, or finish. This is central to the experience: someone describing leaves on a tree receives a noticing exercise, and someone asking for less talking receives a shorter reply and more silence.
+**[Gemma](https://ai.google.dev/gemma/docs/core/model_card_4) drives the adaptive guidance.** After a short opening, each quiet continuation or spoken/typed reply passes to the open-weight model through [Mastra](https://github.com/mastra-ai/mastra), an open-source TypeScript agent framework. Gemma chooses the next meditation cue, practice, and quiet period. This is central to the experience: someone asking to avoid breathing can receive body relaxation, and someone asking for less talking receives a shorter cue and more silence. The practice is returned as structured data so the screen follows the guide’s exercise.
 
 The guidance instructions, timing rules, validation, and workflow are in this repository. Developers can change the guide’s behavior, select a different Gemma model, or point the backend at their own compatible Gemma inference service. The same model configuration is used for both conversation and prepared sessions; there is no automatic fallback to a closed language model. Local Ollama is a supported configuration, but model weights and inference software must be installed separately.
 
@@ -82,9 +82,9 @@ Backend checks and the manual phone checklist are in [TESTING.md](TESTING.md). C
 
 ## Project status
 
-Outside is a working hackathon prototype. On October 11, 2026, a real integration check exercised Gemma through Mastra and Sarah narration: an initial question, a reply about work stress and leaves, a request for less talking and no breathing exercises, and an explicit stop. Gemma adapted the exercise and extended the quiet period. Automated tests cover conversation context, quiet continuation, retries, protected audio, cleanup, and microphone-level detection.
+Outside is a working hackathon prototype. On October 11, 2026, a real integration check exercised Gemma through Mastra and Sarah narration: a direct breathing meditation, a quiet continuation without another question, switching to body relaxation, remembering the no-breathing preference, and an explicit stop. Automated tests cover direct meditation starts, breathing phase timing, conversation context, quiet continuation, retries, protected audio, cleanup, and microphone-level detection.
 
-Physical iPhone recording, silence detection in outdoor wind, interruptions, and screen-off audio playback still need device testing. Background playback and lock-screen controls are configured for prepared tracks in a dedicated app build; conversation mode pauses when the app leaves the foreground. Android is configured but has not been validated. No outdoor field test has been claimed.
+The tester has confirmed spoken replies and adaptive responses work on an iPhone. The new breathing animation, longer quiet periods, silence detection in outdoor wind, interruptions, and screen-off audio playback still need device testing. Background playback and lock-screen controls are configured for prepared tracks in a dedicated app build; conversation mode pauses when the app leaves the foreground. Android is configured but has not been validated. No outdoor field test has been claimed.
 
 ## Privacy
 

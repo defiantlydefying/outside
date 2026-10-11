@@ -48,14 +48,14 @@ Use the base address only, without `/health` or `/api`. The access code is not a
 
 The connection check verifies authentication and required settings. Preparing a session tests the actual provider calls.
 
-## 4. Try the conversational prototype
+## 4. Try the adaptive meditation
 
-1. Reload Outside in Expo Go after the app update. The home screen should show **Talk to Outside · 3 minutes**. The Render backend must also be running the conversation update.
-2. Tap that button, read the microphone notice, and choose **Start talking with Outside**. Allow microphone access if you want to speak.
-3. After Sarah asks what is on your mind, wait until **Listening to you** appears. Say: `Work is overwhelming. I'm sitting outside and can see leaves on a tree.` A pause of about 1.6 seconds after detected speech should finish your reply. **Finish reply** also submits it manually.
-4. Listen for a short response about the surroundings you actually supplied. The guide may ask a follow-up question or suggest a noticing exercise with 10–30 seconds of quiet.
-5. During quiet time, say `Less talking, please. No breathing exercises.` Check that the next reply adapts, rather than restarting a fixed script. During narration, use **Interrupt and speak** first; simultaneous voice interruption over narration is not implemented.
-6. Try **Mute microphone**, **Type a reply**, and **Pause the conversation**. When paused, use **Continue the conversation**; interrupted narration restarts its short reply. Allow an in-flight reply to finish before resuming. **Start by typing** skips the initial microphone request.
+1. Reload Outside in Expo Go after the app update. The home screen should show **Meditate with Outside · 3 minutes**. The Render backend must also be running the meditation update.
+2. Choose **Gentle breathing**, read the microphone notice, and tap **Begin my meditation**. Allow microphone access if you want to speak. The opening should lead an exercise immediately, without a required personal disclosure.
+3. After Sarah finishes, the circle should expand for four seconds while showing **Breathe in**, then contract for six seconds while showing **Breathe out**. There are no holds. The rhythm is optional; use a comfortable natural pace. Let it run silently for more than 30 seconds: it should not attempt to transcribe silence or report a missing recording. Gemma then continues the meditation with another short cue.
+4. Tap **Skip breathing · relax my body instead**, or say `Less talking, please. No breathing exercises.` The next guidance should switch to body relaxation or listening, with more quiet, and the breathing circle should disappear. Subsequent quiet continuations should respect that preference.
+5. Try **Relax the body** in a new session. It should begin with support under the feet or seat and releasing tension. Try **Check in first** separately: after the question, wait for **Listening to you** and describe work stress. The response should guide a practice, rather than repeatedly ask what else you see. A 1.6-second pause ends your reply; **Finish reply** also submits it manually. During narration, use **Change the guidance** before speaking; simultaneous interruption over narration is not implemented.
+6. Try **Mute microphone**, **Type a reply**, and **Pause my meditation**. When paused, the breathing circle should stop. **Continue my meditation** resumes the practice; interrupted narration restarts its short reply. Enable iPhone **Settings → Accessibility → Motion → Reduce Motion**: the circle should remain still while the breathing text continues. **Check in by typing instead** skips the initial microphone request.
 7. Say `stop`, tap **Finish**, or let the three-minute limit expire. Recording and playback should stop. Leaving the screen deletes the conversation; it is not saved as history.
 
 Keep this prototype in the foreground with internet access. Locking the screen or switching apps pauses it and stops recording. When you return, resume explicitly. With no detected speech for about ten seconds after a question, the app pauses listening without another prompt. Intentional quiet periods continue gently on their own. Voice detection is based on microphone levels, so wind and background noise need physical-device checks; use **Finish reply** or typing if detection is unreliable.
@@ -185,12 +185,12 @@ npm test
 npm run build
 ```
 
-The seven backend tests cover authentication, input validation, protected audio, prompt validation, pause scheduling, real FFmpeg duration, conversation context, quiet continuation, idempotent retries, and cleanup. Seven app-side tests cover microphone-level detection, pauses, recording upload configuration, response errors, and timeout cancellation. These use fixtures and mock native uploads, not provider calls; they do not verify phone microphone behavior.
+Eight backend tests cover authentication, input validation, protected audio, prompt validation, pause scheduling, real FFmpeg duration, conversation context, quiet continuation, idempotent retries, cleanup, and direct breathing/body meditation starts. Eight app-side tests cover breathing phase boundaries, microphone-level detection, pauses, recording upload configuration, response errors, and timeout cancellation. These use fixtures and mock native uploads, not provider calls; they do not verify phone microphone behavior or rendered animation.
 
-An optional live integration check consumes two Gemma requests and four short ElevenLabs clips using synthetic check-ins. From `server/` with a configured `.env`, run:
+An optional live integration check consumes three Gemma requests and five ElevenLabs clips using synthetic replies. From `server/` with a configured `.env`, run:
 
 ```sh
 node --env-file=.env --import tsx scripts/check-conversation.mts
 ```
 
-It checks the opening, an adaptive response about work and leaves, a request for less talking and no breathing focus, protected MP3 retrieval, and explicit stop. It passed with the configured Gemma endpoint and Sarah voice on October 11, 2026. It does not record a physical microphone or validate outdoor use.
+It checks a direct breathing start, quiet continuation without a question, a request for less talking and body relaxation, persistence of the no-breathing preference, protected MP3 retrieval, and explicit stop. This passed with the configured Gemma model and Sarah voice on October 11, 2026. It does not record a physical microphone or validate outdoor use.

@@ -11,7 +11,7 @@ test('conversations retain context, preserve quiet turns, recover failed replies
   const fixture = createApp({ token, ready: () => true, generate: async () => { throw new Error('Not used'); }, speak: async text => Buffer.from(`spoken:${text}`), respond: async input => {
     inputs.push(input);
     if (fail) { fail = false; throw new Error('private provider details'); }
-    return { text: 'Notice the movement of the leaves. We can be quiet for a moment.', mode: 'quiet', quietSeconds: 20 };
+    return { text: 'Let sounds arrive and pass. If a thought pulls you away, gently return to listening.', mode: 'quiet', quietSeconds: 40, practice: 'listening' };
   } });
   const server = fixture.app.listen(0, '127.0.0.1');
   await new Promise<void>(resolve => server.once('listening', resolve));
@@ -58,4 +58,38 @@ test('conversation guidance rejects unsafe or excessive instructions and normali
   assert.throws(() => validateReply({ text: 'word '.repeat(70), mode: 'listen', quietSeconds: 0 }));
   assert.equal(validateReply({ text: 'Notice a detail you can see.', mode: 'quiet', quietSeconds: 0 }).quietSeconds, 10);
   assert.equal(validateReply({ text: 'What can you hear?', mode: 'listen', quietSeconds: 20 }).quietSeconds, 0);
+  assert.equal(validateReply({ text: 'Let your shoulders soften.', mode: 'quiet', quietSeconds: 45, practice: 'body' }).practice, 'body');
+  assert.equal(validateReply({ text: 'How would you like to begin?', mode: 'listen', quietSeconds: 0, practice: 'breathing' }).practice, 'none');
+  assert.throws(() => validateReply({ text: 'Breathe gently.', mode: 'quiet', quietSeconds: 46, practice: 'breathing' }));
+});
+
+test('meditation can begin directly with breathing or body relaxation without a check-in', async () => {
+  const token = 'meditation-test-token-at-least-24-characters';
+  let calls = 0;
+  const fixture = createApp({ token, ready: () => true, generate: async () => { throw new Error('Not used'); }, speak: async text => Buffer.from(text), respond: async () => {
+    calls++;
+    return { text: 'Let your shoulders soften.', mode: 'quiet', quietSeconds: 40, practice: 'body' };
+  } });
+  const server = fixture.app.listen(0, '127.0.0.1');
+  await new Promise<void>(resolve => server.once('listening', resolve));
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api/conversations`;
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  try {
+    for (const practice of ['breathing', 'body']) {
+      const response = await fetch(base, { method: 'POST', headers, body: JSON.stringify({ practice }) });
+      assert.equal(response.status, 201);
+      const opening = await response.json() as { id: string; text: string; mode: string; practice: string; quietSeconds: number };
+      assert.equal(opening.practice, practice);
+      assert.equal(opening.mode, 'quiet');
+      assert.equal(opening.quietSeconds, 40);
+      assert.ok(!opening.text.includes('?'));
+      if (practice === 'breathing') assert.match(opening.text, /optional; use your own comfortable pace/);
+      const next = await fetch(`${base}/${opening.id}/turns`, { method: 'POST', headers, body: JSON.stringify({ turn: 1, action: 'continue' }) });
+      assert.equal(next.status, 200);
+      assert.equal((await next.json() as { practice: string }).practice, 'body');
+      await fetch(`${base}/${opening.id}`, { method: 'DELETE', headers });
+    }
+    assert.equal(calls, 2, 'Gemma drives continuation after each opening practice');
+    assert.equal((await fetch(base, { method: 'POST', headers, body: JSON.stringify({ practice: 'invalid' }) })).status, 400);
+  } finally { await new Promise<void>(resolve => server.close(() => resolve())); await fixture.close(); }
 });
