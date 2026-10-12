@@ -19,11 +19,17 @@ export default function Home() {
     <Text style={styles.body}>A gentle voice. Room to breathe. A short outdoor meditation that meets you where you are.</Text>
     <View style={[styles.card, styles.section]}><Text style={styles.label}>Let yourself settle.</Text><Text style={styles.body}>Breathe gently, soften your shoulders, and let the world carry on for a moment. You don’t need a perfect place to pause.</Text></View>
     {(error || storageError) ? <Text style={[styles.error, styles.section]}>{error || storageError}</Text> : null}
+    {/* One action, and it always works: a live guide when connected, the bundled sample when not. */}
     <View style={styles.footer}>
-      <Button title="Meditate with Outside · 3 minutes" disabled={!loaded} onPress={() => router.push('/conversation')} />
-      <Button title="Listen to a 3-minute sample" secondary onPress={() => { void sample(); }} />
-      <Pressable accessibilityRole="button" disabled={!loaded} onPress={() => router.push('/check-in')}><Text style={[styles.link, { textAlign: 'center' }]}>Prepare a guided audio break →</Text></Pressable>
-      <Text style={[styles.small, { textAlign: 'center' }]}>{connection ? 'Personalized breaks are connected.' : 'The sample works without an account. Connect in App setup for personalized breaks.'}</Text>
+      {connection
+        ? <>
+            <Button title="Begin a meditation · 3 minutes" disabled={!loaded} onPress={() => router.push('/conversation')} />
+            <Pressable accessibilityRole="button" disabled={!loaded} onPress={() => router.push('/listen')}><Text style={[styles.link, { textAlign: 'center' }]}>Listen to a recorded track instead →</Text></Pressable>
+          </>
+        : <>
+            <Button title="Listen to a 3-minute sample" disabled={!loaded} onPress={() => { void sample(); }} />
+            <Pressable accessibilityRole="button" onPress={() => router.push('/settings')}><Text style={[styles.link, { textAlign: 'center' }]}>Connect for a live guide →</Text></Pressable>
+          </>}
       <Text style={[styles.small, { textAlign: 'center' }]}>For everyday wellbeing. Not therapy or emergency support.</Text>
     </View>
   </Screen>;

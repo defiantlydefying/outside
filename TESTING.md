@@ -23,7 +23,7 @@ Render runs the API. The Mac runs the app's development server, so keep it runni
 
 ## 2. Try the sample first
 
-1. Tap **Listen to a 3-minute sample** on the home screen.
+1. Tap **Listen to a 3-minute sample** on the home screen. (Once a backend is connected, the sample moves behind **Listen to a recorded track instead →**.)
 2. Tap **Start my break** and check your phone's media volume.
 3. Listen for gentle spoken guidance over soft ambient music. Quiet intervals between prompts are intentional; the music continues underneath.
 4. Try **Pause**, then **Continue my break**.
@@ -42,7 +42,7 @@ The sample is fixed audio narrated with ElevenLabs Sarah, mixed with original am
    | Server address | `https://outside-api-d8xc.onrender.com` |
    | Outside access code | The value of `OUTSIDE_ACCESS_TOKEN` from Render |
 
-4. Tap **Check connection and save**. The home screen should say **Personalized breaks are connected.**
+4. Tap **Check connection and save**. The home screen’s main action should change from **Listen to a 3-minute sample** to **Begin a meditation · 3 minutes**.
 
 Use the base address only, without `/health` or `/api`. The access code is not an ElevenLabs or Ollama API key. Use Render's token, which is separate from the one in the local `server/.env` file. Keep tokens out of screenshots, recordings, and GitHub.
 
@@ -50,7 +50,7 @@ The connection check verifies authentication and required settings. Preparing a 
 
 ## 4. Try the adaptive meditation
 
-1. Reload Outside in Expo Go after the app update. The home screen should show **Meditate with Outside · 3 minutes**. The Render backend must also be running the meditation update.
+1. Reload Outside in Expo Go after the app update. The home screen should show **Begin a meditation · 3 minutes**. The Render backend must also be running the meditation update.
 2. Choose **Gentle breathing**, read the microphone notice, and tap **Begin my meditation**. Allow microphone access if you want to speak. The opening should lead an exercise immediately, without a required personal disclosure.
 3. After Sarah finishes, the circle should expand for four seconds while showing **Breathe in**, then contract for six seconds while showing **Breathe out**. There are no holds. The rhythm is optional; use a comfortable natural pace. Let it run silently for more than 30 seconds: it should not attempt to transcribe silence or report a missing recording. Gemma then continues the meditation with another short cue.
 4. Tap **Skip breathing · relax my body instead**, or say `Less talking, please. No breathing exercises.` The next guidance should switch to body relaxation or listening, with more quiet, and the breathing circle should disappear. Subsequent quiet continuations should respect that preference.
@@ -71,7 +71,7 @@ This mode uses real Gemma inference through Mastra and ElevenLabs transcription/
 
 ## 5. Test a prepared audio break with text
 
-1. Tap **Prepare a guided audio break →**.
+1. Tap **Listen to a recorded track instead →**, then **Prepare a guided break**.
 2. Choose **Just pausing**, **3 minutes**, and **Sitting**.
 3. Type `A tree in a park, leaves moving in a light breeze` under **What do you notice around you?**
 4. Select **More quiet space** and tap **Prepare my break**.
